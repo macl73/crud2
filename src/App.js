@@ -10,21 +10,17 @@ async function sendRequest(url, method, body = null) {
   let response = await fetch(url, {
     method: method,
     headers: {
-      "Content-Type": "application/json;charset=utf-8",
+      "Content-Type": "application/json;charset=utf-8"/*,
       "Access-Control-Allow-Credentials": "true",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Expose-Headers": "*",
-      "Access-Control-Allow-Methods": "POST, GET, PUT, DELETE, OPTIONS"
+      "Access-Control-Allow-Methods": "POST, GET, PUT, DELETE, OPTIONS"*/
     },
-    body: body
+    body: method === "POST" ? JSON.stringify(body) : undefined
   });
 
-  if (method === "DELETE") {
-    return
-  } else {
     let result = await response.json();
     return result
-  };
 };
 
 class App extends React.Component {
@@ -38,7 +34,7 @@ class App extends React.Component {
 
   constructor(props) {
     super(props);
-    this.data = this.props.data
+    //this.data = this.props.data
     this.state = {
       loading: true,
       text: null,
@@ -54,16 +50,21 @@ class App extends React.Component {
     .then(res => this.setState({data: res, loading: false}));
   };
 
+  componentDidUpdate() {
+    
+  }
+
   handleChange(e) {
     this.setState({
-      text: {id: this.state.id, text: JSON.stringify(e.target.value)},
+      text: {id: this.state.id, text: e.target.value},
       id: this.state.id + 1})
   };
 
   handleSubmit(e) {
     e.preventDefault();
     this.sendRequest(serverURL, 'POST', this.state.text)
-    .then(res => this.setState({data: res}));
+    .then(res => this.setState({data: res}))
+    .then(r => console.log(r))
     e.target.reset();
   };
 
