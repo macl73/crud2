@@ -10,17 +10,15 @@ async function sendRequest(url, method, body = null) {
   let response = await fetch(url, {
     method: method,
     headers: {
-      "Content-Type": "application/json;charset=utf-8"/*,
-      "Access-Control-Allow-Credentials": "true",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Expose-Headers": "*",
-      "Access-Control-Allow-Methods": "POST, GET, PUT, DELETE, OPTIONS"*/
+      "Content-Type": "application/json;charset=utf-8"
     },
     body: method === "POST" ? JSON.stringify(body) : undefined
   });
 
+  if (method === "GET") {
     let result = await response.json();
     return result
+  };
 };
 
 class App extends React.Component {
@@ -30,47 +28,42 @@ class App extends React.Component {
     onDelete: PropTypes.func,
     newText: PropTypes.func,
     addText: PropTypes.func
-};
+  };
 
   constructor(props) {
     super(props);
-    //this.data = this.props.data
     this.state = {
       loading: true,
       text: null,
       data: null,
-      id: 0
+      id: 1
     };
 
     this.sendRequest = sendRequest
-};
+  };
 
   componentDidMount() {
     this.sendRequest(serverURL, 'GET')
     .then(res => this.setState({data: res, loading: false}));
   };
 
-  componentDidUpdate() {
-    
-  }
-
   handleChange(e) {
     this.setState({
       text: {id: this.state.id, text: e.target.value},
-      id: this.state.id + 1})
+      id: this.state.id + 1});
   };
 
   handleSubmit(e) {
     e.preventDefault();
     this.sendRequest(serverURL, 'POST', this.state.text)
-    .then(res => this.setState({data: res}))
-    .then(r => console.log(r))
+    .then(() => this.sendRequest(serverURL, 'GET'))
+    .then(res => this.setState({data: res}));
     e.target.reset();
   };
 
-  handleDelete(e) {
-    const itemToDelete = e.target.closest("div").className;
-    this.sendRequest(serverURL + itemToDelete, 'DELETE')
+  handleDelete(itemId) {
+    this.sendRequest(serverURL + itemId, 'DELETE')
+    .then(() => this.sendRequest(serverURL, 'GET'))
     .then(res => this.setState({data: res}));
   };
 
@@ -80,7 +73,7 @@ class App extends React.Component {
   };
   
   render () {
-    if (this.state.loading) {return <div>Loading...</div>}
+    if (this.state.loading) {return <div>Loading...</div>};
 
     return (
       <div className="crud-app">
@@ -88,11 +81,15 @@ class App extends React.Component {
           newText={e => this.handleChange(e)}
           addText={e => this.handleSubmit(e)}/>
 
-        <RenderNotes data={this.state.data} onDelete={e => this.handleDelete(e)} />
-        <div className="button button-refresh" onClick={() => this.refresh()}>Refresh</div>
+        <RenderNotes 
+          data={this.state.data} 
+          onDelete={id => this.handleDelete(id)} />
+
+        <button className="button button-refresh" 
+          onClick={() => this.refresh()}>Refresh</button>
       </div>
     );
-  }
-}
+  };
+};
 
 export default App;
